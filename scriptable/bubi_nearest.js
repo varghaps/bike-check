@@ -1,21 +1,31 @@
 // Bubi Nearest Station Script for Scriptable
 // This script finds the nearest bike sharing station
 
-const NETWORK='nextbike_bh';
-const DEFAULT_MAX_METERS=800;
-const LOCATION_TIMEOUT_MS=15000;
-const ALLOW_FALLBACK_COORDS=false;
-const SHOW_DISTANCES=true;
-const DEBUG=false;
+// Configuration
+const NETWORK='nextbike_bh';              // Nextbike network ID for Budapest
+const DEFAULT_MAX_METERS=800;             // Default search radius in meters
+const LOCATION_TIMEOUT_MS=15000;          // GPS location timeout
+const ALLOW_FALLBACK_COORDS=false;        // Allow fallback coordinates (unused)
+const SHOW_DISTANCES=true;                // Show walking distances in output
+const DEBUG=false;                        // Enable debug logging
 
+// Error handling wrapper with step names for debugging
 async function step(name,fn){try{return await fn();}catch(e){throw new Error(`[${name}] ${e&&e.message?e.message:String(e)}`);}}
+// Fetch JSON with timeout
 async function getJSON(url,timeout=15){const r=new Request(url);r.timeoutInterval=timeout;return await r.loadJSON();}
-function toRad(d){return d*Math.PI/180;}function haversine(a,b,c,d){const R=6371000,D1=toRad(c-a),D2=toRad(d-b),A=Math.sin(D1/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(D2/2)**2;return 2*R*Math.atan2(Math.sqrt(A),Math.sqrt(1-A));}
+// Convert degrees to radians
+function toRad(d){return d*Math.PI/180;}
+// Calculate distance between coordinates using Haversine formula
+function haversine(a,b,c,d){const R=6371000,D1=toRad(c-a),D2=toRad(d-b),A=Math.sin(D1/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(D2/2)**2;return 2*R*Math.atan2(Math.sqrt(A),Math.sqrt(1-A));}
+// Parse input from Shortcuts (number=radius, JSON=full params, empty=defaults)
 function parseShortcutInput(){let raw=args.shortcutParameter;if(raw==null||raw==='')return{};if(typeof raw==='number')return{radius:raw};const s=String(raw);if(/^\s*[\d.]+\s*$/.test(s))return{radius:Number(s)};try{return JSON.parse(s);}catch{return{};}}
+// Extract bike count from station status (handles different GBFS formats)
 function getBikeCount(s){let n=Number(s?.num_bikes_available??s?.num_vehicles_available??0);if(!Number.isFinite(n)||n<0)n=0;if(Array.isArray(s?.vehicle_types_available)){n=Math.max(n,s.vehicle_types_available.reduce((x,v)=>{const c=Number(v?.count??0);return x+(Number.isFinite(c)?c:0);},0));}if(s?.num_bikes_available_types&&typeof s.num_bikes_available_types==='object'){n=Math.max(n,Object.values(s.num_bikes_available_types).reduce((x,v)=>{const c=Number(v??0);return x+(Number.isFinite(c)?c:0);},0));}return n;}
+// Check if station allows renting (tolerant parsing of various formats)
 function rentingOKTolerant(s){const f=s?.is_renting;if(f===undefined||f===true||f===1||f==="1"||f==="true")return true;if(f===0||f==="0"||f===false||f==="false")return false;return true;}
 
 (async()=>{try{
+  // Step 1: Parse input parameters from Shortcuts
   const inp=await step('parse-input',async()=>parseShortcutInput());
   let maxMeters=Number(inp.radius);if(!Number.isFinite(maxMeters)||maxMeters<=0)maxMeters=DEFAULT_MAX_METERS;
 
