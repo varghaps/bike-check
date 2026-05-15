@@ -26,8 +26,8 @@ function haversine(a,b,c,d){const R=6371000,D1=toRad(c-a),D2=toRad(d-b),A=Math.s
 function bearing(a,b,c,d){const φ1=toRad(a),φ2=toRad(c),Δλ=toRad(d-b);const y=Math.sin(Δλ)*Math.cos(φ2);const x=Math.cos(φ1)*Math.sin(φ2)-Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);return (Math.atan2(y,x)*180/Math.PI+360)%360;}
 // 8-point compass arrow for a bearing
 function arrow(deg){const arrows=['↑','↗','→','↘','↓','↙','←','↖'];return arrows[Math.round(deg/45)%8];}
-// Hungarian direction word for an arrow (used in the spoken output)
-const DIR_HU={'↑':'északra','↗':'északkeletre','→':'keletre','↘':'délkeletre','↓':'délre','↙':'délnyugatra','←':'nyugatra','↖':'északnyugatra'};
+// Hungarian direction word for an arrow (combined with " felé" in the spoken output)
+const DIR_HU={'↑':'észak','↗':'északkelet','→':'kelet','↘':'délkelet','↓':'dél','↙':'délnyugat','←':'nyugat','↖':'északnyugat'};
 // Parse input from Shortcuts (number=radius, JSON=full params, empty=defaults)
 function parseShortcutInput(){let raw=args.shortcutParameter;if(raw==null||raw==='')return{};if(typeof raw==='number')return{radius:raw};const s=String(raw);if(/^\s*[\d.]+\s*$/.test(s))return{radius:Number(s)};try{return JSON.parse(s);}catch{return{};}}
 // Type filter: returns true if the vehicle matches the requested type

@@ -97,7 +97,7 @@ The Manfred script's notification body always shows the visual line above (3 pic
 
 ```
 A legközelebbi bicaj 120 méterre van, Margit híd Buda közelében.
-A legközelebbi elektromos bicaj 260 méterre van, délkeletre felé.
+A legközelebbi elektromos bicaj 260 méterre van, délkelet felé.
 ```
 
 A typical setup is two shortcuts pointing at the same script:
