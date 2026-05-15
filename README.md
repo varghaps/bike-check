@@ -91,6 +91,19 @@ Margit híd Buda · 120m | Vanília u. 12 · 180m | 260m ↘
 
 Tapping opens Maps for walking navigation to the first pick.
 
+#### Voice output (Siri, Apple Watch)
+
+The Manfred script's notification body always shows the visual line above (3 picks). The script's *Shortcut output*, however, is a Hungarian spoken sentence about **only the closest** bike — designed for a Shortcuts **Speak Text** action so Siri reads it aloud. Examples:
+
+```
+A legközelebbi bicaj 120 méterre van, Margit híd Buda közelében.
+A legközelebbi elektromos bicaj 260 méterre van, délkeletre felé.
+```
+
+A typical setup is two shortcuts pointing at the same script:
+- *Manfred* — Run Script only (silent, fires the notification)
+- *Manfred hangosan* — Run Script + Speak Text (set Language to Hungarian) for Siri / "Hey Siri, Manfred hangosan"
+
 ---
 
 ## 🔧 Configuration

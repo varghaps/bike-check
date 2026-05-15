@@ -26,6 +26,8 @@ function haversine(a,b,c,d){const R=6371000,D1=toRad(c-a),D2=toRad(d-b),A=Math.s
 function bearing(a,b,c,d){const φ1=toRad(a),φ2=toRad(c),Δλ=toRad(d-b);const y=Math.sin(Δλ)*Math.cos(φ2);const x=Math.cos(φ1)*Math.sin(φ2)-Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);return (Math.atan2(y,x)*180/Math.PI+360)%360;}
 // 8-point compass arrow for a bearing
 function arrow(deg){const arrows=['↑','↗','→','↘','↓','↙','←','↖'];return arrows[Math.round(deg/45)%8];}
+// Hungarian direction word for an arrow (used in the spoken output)
+const DIR_HU={'↑':'északra','↗':'északkeletre','→':'keletre','↘':'délkeletre','↓':'délre','↙':'délnyugatra','←':'nyugatra','↖':'északnyugatra'};
 // Parse input from Shortcuts (number=radius, JSON=full params, empty=defaults)
 function parseShortcutInput(){let raw=args.shortcutParameter;if(raw==null||raw==='')return{};if(typeof raw==='number')return{radius:raw};const s=String(raw);if(/^\s*[\d.]+\s*$/.test(s))return{radius:Number(s)};try{return JSON.parse(s);}catch{return{};}}
 // Type filter: returns true if the vehicle matches the requested type
@@ -104,6 +106,14 @@ async function reverseLabel(lat,lon){try{const p=Location.reverseGeocode(lat,lon
     if(p.label){return SHOW_DISTANCES?`${p.label}${tag} · ${distFmt(p.dist)}`:`${p.label}${tag}`;}
     return `${distFmt(p.dist)} ${p.bear||''}${tag}`.trim();
   };
+  // Spoken (Hungarian) form of the closest pick — consumed by Shortcuts' Speak Text
+  const renderSpoken=p=>{
+    const kind=p.vtype==='ebike'?'elektromos bicaj':'bicaj';
+    const dist=`${Math.round(p.dist)} méter`;
+    if(p.label)return `A legközelebbi ${kind} ${dist}re van, ${p.label} közelében.`;
+    const dir=DIR_HU[p.bear];
+    return `A legközelebbi ${kind} ${dist}re van${dir?', '+dir+' felé':''}.`;
+  };
 
   const n=new Notification();
   if(picks.length){
@@ -114,16 +124,17 @@ async function reverseLabel(lat,lon){try{const p=Location.reverseGeocode(lat,lon
     n.addAction('Navigate #1',openURL);
     if(labelled[1])n.addAction('Navigate #2',`maps://?daddr=${labelled[1].lat},${labelled[1].lon}&dirflg=w`);
     if(labelled[2])n.addAction('Navigate #3',`maps://?daddr=${labelled[2].lat},${labelled[2].lon}&dirflg=w`);
-    n.openURL=openURL;Script.setShortcutOutput(line);
+    n.openURL=openURL;Script.setShortcutOutput(renderSpoken(labelled[0]));
   }else{
     n.title='No Manfred bikes within radius';
     if(labelled[0]){
       const line=renderItem(labelled[0]);
       n.body=line;
       const openURL=`maps://?daddr=${labelled[0].lat},${labelled[0].lon}&dirflg=w`;
-      n.addAction('Navigate',openURL);n.openURL=openURL;Script.setShortcutOutput(line);
+      n.addAction('Navigate',openURL);n.openURL=openURL;
+      Script.setShortcutOutput(`A keresési sugáron belül nincs bicaj. ${renderSpoken(labelled[0])}`);
     }else{
-      n.body='No bikes found';Script.setShortcutOutput('No bikes found');
+      n.body='No bikes found';Script.setShortcutOutput('Nincs elérhető Manfred bicaj.');
     }
   }
   await n.schedule();Script.complete();
