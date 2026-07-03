@@ -169,20 +169,45 @@ Your location never leaves your device. The scripts request public GBFS JSON fee
 
 ## 🤖 Android (web app)
 
-The [`web/`](web/) folder is a small installable **PWA** for Manfred on Android — no Scriptable/Shortcuts equivalent exists on Android, so this fills that gap.
+Android has no Scriptable/Shortcuts equivalent, so the [`web/`](web/) folder is a small installable **PWA** that does the Manfred job in the browser.
 
-- Static HTML/JS/CSS, deployed to Vercel. Reuses the same ranking logic as the Scriptable script.
-- Fetches the Manfred feed through a same-origin **Vercel rewrite proxy** ([`web/vercel.json`](web/vercel.json)) — the feed sends no CORS headers, so a browser can't call it directly.
-- On tap: gets your location → lists the **3 closest bikes** (distance + compass direction + walk time) → **reads the nearest one aloud** in Hungarian via the Web Speech API.
-- Type toggle: 🚲 bike (default) / ⚡ ebike / any.
+### ▶️ Use it
 
-### Install on Android
+**Live app: https://bringakereso.vercel.app**
 
-1. Open the deployed URL in **Chrome**.
-2. Chrome menu (⋮) → **Install app** (or *Add to Home screen*).
-3. Launch from the home-screen icon — it opens as a standalone app. First run asks for location permission.
+1. Open it in **Chrome** on your phone.
+2. Tap **Keresés** and allow location access.
+3. You get the **3 closest bikes** — distance, compass direction, and walking time — and it **reads the nearest one aloud in Hungarian**. Tap a card to open walking directions in Google Maps.
+
+### 🎛️ Controls
+
+- **Type:** 🚲 Bicaj (non-electric, default) / ⚡ E-bike / Bármi (any).
+- **Max távolság:** search radius slider, 200–3000 m.
+- **🔊 Eredmény felolvasása:** toggle the automatic voice readout on/off. The **🔊 Felolvas** button always speaks on demand, even with the toggle off.
+
+Your type, radius, and audio choices are remembered on the device.
+
+### 📲 Install as an app
+
+1. Open the link in **Chrome** → menu (⋮) → **Install app** (or *Add to Home screen*).
+2. Launch from the home-screen icon — it opens standalone, like a native app.
+
+### 🔄 Updating
+
+The service worker is **network-first**, so new versions appear on a normal reload while online. If a change ever seems stuck, fully close the installed app (swipe it from Recents) and reopen, or clear the site data in Chrome.
+
+### 🩺 No sound on Android?
+
+The app requests a Hungarian voice, but Android only speaks if that voice is installed:
+**Settings → Accessibility / Language → Text-to-speech output → Google → install the Hungarian voice.** Desktop Chrome usually has voices built in.
 
 > **Labels are distance + direction only.** The iOS script could borrow nearby *Bubi* station names, but MOL Bubi's GBFS feed has been discontinued (Manfred took over the ex-Bubi hardware), so there is no station-name source left. If Manfred later publishes a `station_information` feed, names can be added back.
+
+### 🛠️ How it works (web)
+
+- Static HTML/JS/CSS on Vercel; reuses the same ranking logic as the Scriptable script (haversine, bearing, `is_disabled`/`is_reserved` + type filtering, top-3).
+- The Manfred feed sends no CORS headers, so a same-origin **Vercel rewrite proxy** ([`web/vercel.json`](web/vercel.json)) fronts it — no serverless code, stays static.
+- Voice uses the browser **Web Speech API**; installability comes from [`web/manifest.json`](web/manifest.json) + a minimal service worker ([`web/sw.js`](web/sw.js)).
 
 ---
 
