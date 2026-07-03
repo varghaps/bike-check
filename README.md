@@ -1,14 +1,13 @@
 # 🚲 bike-check
 
-Find the closest bikes in Budapest on iPhone or Apple Watch using **Scriptable** and **Shortcuts**.
-Two scripts, two providers:
+Find the closest bikes in Budapest, on **iPhone / Apple Watch** (Scriptable + Shortcuts) or **Android** (installable web app):
 
-- **Bubi** (Nextbike) — 3 closest **stations** with available bikes
-- **Manfred** — 3 closest **free-floating bikes**
+- **Bubi** (Nextbike) — 3 closest **stations** with available bikes *(iOS)*
+- **Manfred** — 3 closest **free-floating bikes** *(iOS + Android)*
 
-Both show walking distance and tap-to-navigate actions via Apple Maps.
+All show walking distance and tap-to-navigate actions.
 
-> Built with Scriptable + Shortcuts
+> Built with Scriptable + Shortcuts (iOS) and a static PWA (Android)
 > Not intended for commercial use
 
 ---
@@ -168,11 +167,30 @@ Your location never leaves your device. The scripts request public GBFS JSON fee
 
 ---
 
+## 🤖 Android (web app)
+
+The [`web/`](web/) folder is a small installable **PWA** for Manfred on Android — no Scriptable/Shortcuts equivalent exists on Android, so this fills that gap.
+
+- Static HTML/JS/CSS, deployed to Vercel. Reuses the same ranking logic as the Scriptable script.
+- Fetches the Manfred feed through a same-origin **Vercel rewrite proxy** ([`web/vercel.json`](web/vercel.json)) — the feed sends no CORS headers, so a browser can't call it directly.
+- On tap: gets your location → lists the **3 closest bikes** (distance + compass direction + walk time) → **reads the nearest one aloud** in Hungarian via the Web Speech API.
+- Type toggle: 🚲 bike (default) / ⚡ ebike / any.
+
+### Install on Android
+
+1. Open the deployed URL in **Chrome**.
+2. Chrome menu (⋮) → **Install app** (or *Add to Home screen*).
+3. Launch from the home-screen icon — it opens as a standalone app. First run asks for location permission.
+
+> **Labels are distance + direction only.** The iOS script could borrow nearby *Bubi* station names, but MOL Bubi's GBFS feed has been discontinued (Manfred took over the ex-Bubi hardware), so there is no station-name source left. If Manfred later publishes a `station_information` feed, names can be added back.
+
+---
+
 ## 📄 License
 
 MIT.
 
-This is a personal automation helper, provided as-is, with no affiliation to Nextbike, BKK, Bubi, or Manfred. Use at your own risk.
+This is a personal automation helper, provided as-is, with no affiliation to Nextbike, BKK, Bubi, or Manfred. The Manfred data is © Manfred Mobilitás Platform Kft.; see their [terms](https://manfred.mobi/api/termsandconditions). Use at your own risk.
 
 ---
 

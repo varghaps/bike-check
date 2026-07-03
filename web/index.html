@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16a34a">
+<title>Manfred Bike Finder</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+  :root{ --bg:#0b0f0d; --card:#141a16; --accent:#16a34a; --text:#e8f0ea; --muted:#8aa294; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ margin:0; min-height:100dvh; background:var(--bg); color:var(--text);
+        font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+        display:flex; flex-direction:column; padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom); }
+  header{ text-align:center; padding:24px 0 8px; }
+  h1{ margin:0; font-size:1.4rem; } h1 .b{ color:var(--accent); }
+  .sub{ color:var(--muted); font-size:.85rem; margin-top:4px; }
+  .types{ display:flex; gap:8px; justify-content:center; margin:16px 0; }
+  .types label{ flex:1; max-width:120px; text-align:center; padding:10px; border-radius:12px;
+                background:var(--card); color:var(--muted); cursor:pointer; user-select:none; font-size:.9rem; }
+  .types input{ display:none; }
+  .types input:checked + span{ color:var(--text); }
+  .types label:has(input:checked){ background:var(--accent); color:#04120a; }
+  .types label:has(input:checked) span{ color:#04120a; }
+  #find{ width:100%; padding:18px; font-size:1.15rem; font-weight:600; border:0; border-radius:16px;
+         background:var(--accent); color:#04120a; cursor:pointer; }
+  #find:disabled{ opacity:.6; }
+  #status{ text-align:center; color:var(--muted); min-height:1.4em; margin:14px 0; font-size:.9rem; }
+  #list{ display:flex; flex-direction:column; gap:10px; }
+  .card{ display:flex; align-items:center; gap:12px; padding:14px; background:var(--card);
+         border-radius:14px; text-decoration:none; color:inherit; }
+  .card .rank{ width:28px; height:28px; flex:none; border-radius:50%; background:var(--accent);
+               color:#04120a; font-weight:700; display:grid; place-items:center; font-size:.9rem; }
+  .card .body{ flex:1; min-width:0; }
+  .card .dist{ font-size:1.15rem; font-weight:600; }
+  .card .dist .arrow{ color:var(--accent); }
+  .card .meta{ color:var(--muted); font-size:.82rem; margin-top:2px; }
+  .card .go{ color:var(--accent); font-size:.85rem; white-space:nowrap; }
+  #speak{ margin:16px auto 0; display:block; padding:12px 22px; border:1px solid var(--accent);
+          background:transparent; color:var(--accent); border-radius:14px; font-size:1rem; cursor:pointer; }
+  footer{ margin-top:auto; padding:20px 0; text-align:center; color:var(--muted); font-size:.72rem; }
+  footer a{ color:var(--muted); }
+</style>
+</head>
+<body>
+  <header>
+    <h1><span class="b">Manfred</span> bicajkereső</h1>
+    <div class="sub">A 3 legközelebbi szabad bicaj Budapesten</div>
+  </header>
+
+  <div class="types">
+    <label><input type="radio" name="type" value="bike" checked><span>🚲 Bicaj</span></label>
+    <label><input type="radio" name="type" value="ebike"><span>⚡ E-bike</span></label>
+    <label><input type="radio" name="type" value="any"><span>Bármi</span></label>
+  </div>
+
+  <button id="find">Keresés</button>
+  <div id="status">Koppints a Keresésre</div>
+  <div id="list"></div>
+  <button id="speak" hidden>🔊 Felolvas</button>
+
+  <footer>
+    Adat: <a href="https://manfred.mobi/" target="_blank" rel="noopener">Manfred</a> ·
+    a Manfred Mobilitás Platform Kft. tulajdona ·
+    <a href="https://manfred.mobi/api/termsandconditions" target="_blank" rel="noopener">ÁSZF</a><br>
+    Nem hivatalos, személyes segédeszköz.
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

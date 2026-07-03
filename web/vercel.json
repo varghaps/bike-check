@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/manfred/:path*",
+      "destination": "https://audit.manfred.mobi/gbfs/budapest/:path*"
+    }
+  ]
+}
