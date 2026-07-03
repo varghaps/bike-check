@@ -24,6 +24,14 @@
   .types input:checked + span{ color:var(--text); }
   .types label:has(input:checked){ background:var(--accent); color:#04120a; }
   .types label:has(input:checked) span{ color:#04120a; }
+  .control{ margin:0 0 14px; }
+  .control-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+  .control-row label{ color:var(--muted); font-size:.85rem; }
+  #radval{ font-weight:600; }
+  #radius{ width:100%; accent-color:var(--accent); }
+  .toggle{ display:flex; align-items:center; gap:8px; justify-content:center;
+           color:var(--muted); font-size:.85rem; margin:0 0 16px; cursor:pointer; user-select:none; }
+  .toggle input{ width:18px; height:18px; accent-color:var(--accent); }
   #find{ width:100%; padding:18px; font-size:1.15rem; font-weight:600; border:0; border-radius:16px;
          background:var(--accent); color:#04120a; cursor:pointer; }
   #find:disabled{ opacity:.6; }
@@ -55,6 +63,16 @@
     <label><input type="radio" name="type" value="ebike"><span>⚡ E-bike</span></label>
     <label><input type="radio" name="type" value="any"><span>Bármi</span></label>
   </div>
+
+  <div class="control">
+    <div class="control-row">
+      <label for="radius">Max távolság</label>
+      <span id="radval">800 m</span>
+    </div>
+    <input type="range" id="radius" min="200" max="3000" step="100" value="800">
+  </div>
+
+  <label class="toggle"><input type="checkbox" id="audio" checked><span>🔊 Eredmény felolvasása</span></label>
 
   <button id="find">Keresés</button>
   <div id="status">Koppints a Keresésre</div>

@@ -22,9 +22,21 @@ const matchesType=(v,t)=>t==='any'?true:v?.vehicle_type_id===t;
 // --- DOM refs ---
 const $=id=>document.getElementById(id);
 const statusEl=$('status'), listEl=$('list'), findBtn=$('find'), speakBtn=$('speak');
+const radiusEl=$('radius'), radValEl=$('radval'), audioEl=$('audio');
 let lastSpoken='';   // remembered so the 🔊 button can repeat it
 
 function setStatus(msg){statusEl.textContent=msg;}
+
+// --- persisted preferences (radius + audio on/off) ---
+const store={get:(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:v;}catch{return d;}},set:(k,v)=>{try{localStorage.setItem(k,v);}catch{}}};
+radiusEl.value=store.get('radius',String(DEFAULT_MAX_METERS));
+audioEl.checked=store.get('audio','1')!=='0';
+const currentRadius=()=>Number(radiusEl.value)||DEFAULT_MAX_METERS;
+const audioOn=()=>audioEl.checked;
+function syncRadiusLabel(){radValEl.textContent=`${currentRadius()} m`;}
+syncRadiusLabel();
+radiusEl.addEventListener('input',()=>{syncRadiusLabel();store.set('radius',radiusEl.value);});
+audioEl.addEventListener('change',()=>{store.set('audio',audioEl.checked?'1':'0');if(!audioEl.checked&&'speechSynthesis'in window)speechSynthesis.cancel();});
 
 // --- platform layer ---
 function getLocation(){
@@ -100,17 +112,38 @@ function render(picks,withinRadius){
 }
 
 // --- voice ---
-function speak(text){
-  if(!('speechSynthesis'in window)||!text)return;
-  speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang='hu-HU';
-  speechSynthesis.speak(u);
+// Android Chrome only allows speech that starts within a user gesture and needs
+// voices loaded first. We (1) cache voices, (2) "unlock" synchronously on the tap
+// before any await, and (3) pick a Hungarian voice explicitly.
+const hasTTS='speechSynthesis'in window;
+let voices=[];
+function loadVoices(){if(hasTTS)voices=speechSynthesis.getVoices()||[];}
+if(hasTTS){loadVoices();speechSynthesis.onvoiceschanged=loadVoices;}
+const huVoice=()=>voices.find(v=>/^hu/i.test(v.lang))||null;
+
+// Called synchronously inside the tap handler so the gesture "unlocks" TTS,
+// even though the real sentence is spoken later, after the network fetch.
+function primeSpeech(){
+  if(!hasTTS||!audioOn())return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.lang='hu-HU';speechSynthesis.speak(u);}catch{}
+}
+
+function speak(text,force){
+  if(!hasTTS||!text||(!audioOn()&&!force))return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='hu-HU';
+    const v=huVoice();if(v)u.voice=v;
+    speechSynthesis.resume();   // Android sometimes leaves the queue paused
+    speechSynthesis.speak(u);
+  }catch{}
 }
 
 // --- main flow (triggered by a user tap → satisfies the browser gesture rule) ---
 async function run(){
   const type=document.querySelector('input[name=type]:checked')?.value||DEFAULT_TYPE;
+  const maxMeters=currentRadius();
   findBtn.disabled=true;
   listEl.innerHTML='';speakBtn.hidden=true;
   try{
@@ -118,12 +151,12 @@ async function run(){
     const me=await getLocation();
     setStatus('Bicajok keresése…');
     const bikes=await fetchBikes();
-    const {picks,withinRadius}=rank(bikes,me,type,DEFAULT_MAX_METERS);
+    const {picks,withinRadius}=rank(bikes,me,type,maxMeters);
     if(!picks.length){setStatus('Nincs elérhető Manfred bicaj.');lastSpoken='Nincs elérhető Manfred bicaj.';speak(lastSpoken);return;}
     render(picks,withinRadius);
-    setStatus(withinRadius?`${picks.length} bicaj ${DEFAULT_MAX_METERS} méteren belül`:'Nincs a sugáron belül — a legközelebbi:');
+    setStatus(withinRadius?`${picks.length} bicaj ${maxMeters} méteren belül`:'Nincs a sugáron belül — a legközelebbi:');
     lastSpoken=renderSpoken(picks[0],withinRadius);
-    speak(lastSpoken);           // auto-read the nearest (tap gesture allows it)
+    speak(lastSpoken);           // auto-read the nearest (unlocked by primeSpeech on tap)
   }catch(e){
     setStatus(e.message||String(e));
   }finally{
@@ -131,8 +164,8 @@ async function run(){
   }
 }
 
-findBtn.addEventListener('click',run);
-speakBtn.addEventListener('click',()=>speak(lastSpoken));
+findBtn.addEventListener('click',()=>{primeSpeech();run();});
+speakBtn.addEventListener('click',()=>speak(lastSpoken,true));
 
 // register service worker (installability)
 if('serviceWorker'in navigator){
